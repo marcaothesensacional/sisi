@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revisão — Patologia Geral</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  button { font-family: inherit; cursor: pointer; }
+  select { font-family: inherit; }
+
+  /* MENU */
+  #tela-menu { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .menu-inner { max-width: 600px; width: 100%; text-align: center; }
+  .menu-icon { font-size: 56px; margin-bottom: 16px; }
+  .menu-title { font-size: 30px; font-weight: 800; color: #e2e8f0; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .menu-sub { font-size: 15px; color: #94a3b8; margin-bottom: 36px; }
+  .filtro-box { background: #1e293b; border-radius: 16px; padding: 20px; margin-bottom: 24px; border: 1px solid #334155; text-align: left; }
+  .filtro-label { color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 8px; }
+  .filtro-select { width: 100%; background: #0f172a; color: #e2e8f0; border: 1px solid #475569; border-radius: 8px; padding: 10px 14px; font-size: 15px; margin-bottom: 10px; }
+  .filtro-count { color: #64748b; font-size: 13px; }
+  .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; border-radius: 12px; padding: 16px 24px; font-size: 16px; font-weight: 700; width: 100%; margin-bottom: 10px; transition: opacity 0.15s; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 12px; padding: 16px 24px; font-size: 16px; font-weight: 600; width: 100%; margin-bottom: 10px; transition: background 0.15s; }
+  .btn-secondary:hover { background: #273549; }
+
+  /* QUIZ */
+  #tela-quiz { display: none; padding: 24px; min-height: 100vh; }
+  .quiz-inner { max-width: 680px; margin: 0 auto; }
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .btn-back { background: none; color: #64748b; border: none; font-size: 14px; padding: 0; }
+  .btn-back:hover { color: #94a3b8; }
+  .quiz-counter { color: #94a3b8; font-size: 14px; }
+  .acertos-badge { color: #10b981; margin-right: 12px; font-weight: 600; }
+  .progress-bar-bg { background: #1e293b; border-radius: 99px; height: 6px; margin-bottom: 22px; }
+  .progress-bar-fill { background: linear-gradient(90deg, #4f46e5, #7c3aed); border-radius: 99px; height: 100%; transition: width 0.3s; }
+  .tema-badge { display: inline-block; background: #1e1b4b; color: #a5b4fc; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 99px; border: 1px solid #3730a3; margin-bottom: 14px; }
+  .questao-box { background: #1e293b; border-radius: 16px; padding: 22px; margin-bottom: 18px; border: 1px solid #334155; }
+  .questao-num { color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .questao-texto { color: #e2e8f0; font-size: 15px; line-height: 1.7; }
+  .alternativas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .alt-btn { text-align: left; padding: 13px 16px; border-radius: 12px; border: 2px solid #475569; background: #1e293b; color: #cbd5e1; font-size: 15px; line-height: 1.5; display: flex; align-items: flex-start; gap: 12px; transition: all 0.15s; }
+  .alt-btn:hover:not(:disabled) { border-color: #6366f1; background: #1e2a3b; }
+  .alt-btn:disabled { cursor: default; }
+  .alt-btn.correta { border-color: #34d399; background: rgba(16,185,129,0.12); color: #6ee7b7; }
+  .alt-btn.errada { border-color: #f87171; background: rgba(239,68,68,0.12); color: #fca5a5; }
+  .alt-btn.neutra { border-color: #334155; background: #1e293b; color: #475569; }
+  .alt-letra { font-weight: 700; min-width: 22px; font-size: 14px; flex-shrink: 0; }
+  .explicacao-box { background: #0a1929; border: 1px solid #1e3a5f; border-radius: 16px; padding: 22px; margin-bottom: 18px; }
+  .exp-status { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .exp-status-txt { font-weight: 700; font-size: 15px; }
+  .exp-status-txt.ok { color: #34d399; }
+  .exp-status-txt.err { color: #f87171; }
+  .exp-secao { color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; margin-top: 14px; }
+  .exp-texto { color: #cbd5e1; font-size: 14px; line-height: 1.7; }
+  .exp-erradas { color: #94a3b8; font-size: 14px; line-height: 1.7; }
+  .macete-box { background: #1e1b4b; border-radius: 10px; padding: 12px 16px; border: 1px solid #3730a3; margin-top: 14px; }
+  .macete-txt { color: #a5b4fc; font-size: 14px; font-weight: 600; }
+  .btn-proxima { width: 100%; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; border-radius: 12px; padding: 16px 24px; font-size: 16px; font-weight: 700; margin-bottom: 24px; transition: opacity 0.15s; }
+  .btn-proxima:hover { opacity: 0.9; }
+
+  /* RESULTADO */
+  #tela-resultado { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; }
+  .resultado-inner { max-width: 500px; width: 100%; }
+  .resultado-emoji { font-size: 64px; margin-bottom: 16px; }
+  .resultado-titulo { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+  .resultado-pct { font-size: 56px; font-weight: 900; margin-bottom: 4px; }
+  .resultado-sub { color: #94a3b8; margin-bottom: 28px; font-size: 15px; }
+  .historico-box { background: #1e293b; border-radius: 12px; padding: 18px; margin-bottom: 28px; text-align: left; }
+  .historico-item { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #334155; font-size: 14px; }
+  .historico-item:last-child { border-bottom: none; }
+  .hist-num { color: #94a3b8; }
+  .hist-ok { color: #10b981; font-weight: 600; }
+  .hist-err { color: #ef4444; font-weight: 600; }
+
+  /* RESUMO */
+  #tela-resumo { display: none; padding: 24px; min-height: 100vh; }
+  .resumo-inner { max-width: 720px; margin: 0 auto; }
+  .resumo-titulo { color: #e2e8f0; font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .resumo-sub { color: #64748b; font-size: 14px; margin-bottom: 26px; }
+  .conceito-item { background: #1e293b; border-radius: 12px; padding: 14px 18px; border: 1px solid #334155; display: flex; align-items: flex-start; gap: 14px; margin-bottom: 10px; }
+  .conceito-num { background: #4f46e5; color: white; border-radius: 8px; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .conceito-titulo { color: #c7d2fe; font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+  .conceito-detalhe { color: #94a3b8; font-size: 14px; }
+
+  @media (max-width: 480px) {
+    .menu-title { font-size: 24px; }
+    .questao-texto { font-size: 14px; }
+    .alt-btn { font-size: 14px; padding: 11px 13px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MENU -->
+<div id="tela-menu">
+  <div class="menu-inner">
+    <div class="menu-icon">🩺</div>
+    <h1 class="menu-title">Revisão — Patologia Geral</h1>
+    <p class="menu-sub">30 questões · Explicação completa · Macetes para a prova</p>
+    <div class="filtro-box">
+      <label class="filtro-label">Filtrar por tema</label>
+      <select id="filtro-select" class="filtro-select"></select>
+      <span id="filtro-count" class="filtro-count"></span>
+    </div>
+    <button class="btn-primary" onclick="iniciarQuiz(false)">🎯 Simular Prova</button>
+    <button class="btn-secondary" onclick="iniciarQuiz(true)">📖 Modo Estudo (ver resposta direto)</button>
+    <button class="btn-secondary" onclick="mostrarResumo()">📋 20 Conceitos-Chave para a Prova</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="tela-quiz">
+  <div class="quiz-inner">
+    <div class="quiz-header">
+      <button class="btn-back" onclick="irPara('menu')">← Menu</button>
+      <span class="quiz-counter">
+        <span id="badge-acertos" class="acertos-badge" style="display:none"></span>
+        <span id="contador-questao"></span>
+      </span>
+    </div>
+    <div class="progress-bar-bg"><div id="progress-fill" class="progress-bar-fill" style="width:0%"></div></div>
+    <span id="tema-badge" class="tema-badge"></span>
+    <div class="questao-box">
+      <div id="questao-num" class="questao-num"></div>
+      <div id="questao-texto" class="questao-texto"></div>
+    </div>
+    <div id="alternativas" class="alternativas"></div>
+    <div id="explicacao-box" class="explicacao-box" style="display:none">
+      <div class="exp-status">
+        <span id="exp-emoji" style="font-size:20px"></span>
+        <span id="exp-status-txt" class="exp-status-txt"></span>
+      </div>
+      <div class="exp-secao">Por que essa resposta?</div>
+      <div id="exp-texto" class="exp-texto"></div>
+      <div id="exp-erradas-wrap" style="display:none">
+        <div class="exp-secao" style="margin-top:14px">Por que as outras estão erradas?</div>
+        <div id="exp-erradas" class="exp-erradas"></div>
+      </div>
+      <div class="macete-box"><div id="exp-macete" class="macete-txt"></div></div>
+    </div>
+    <button id="btn-proxima" class="btn-proxima" style="display:none" onclick="proximaQuestao()"></button>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div id="tela-resultado">
+  <div class="resultado-inner">
+    <div id="resultado-emoji" class="resultado-emoji"></div>
+    <h2 class="resultado-titulo">Resultado</h2>
+    <div id="resultado-pct" class="resultado-pct"></div>
+    <p id="resultado-sub" class="resultado-sub"></p>
+    <div id="historico-box" class="historico-box"></div>
+    <button class="btn-primary" onclick="iniciarQuiz(false)">Tentar Novamente</button>
+    <button class="btn-secondary" onclick="irPara('menu')">Voltar ao Menu</button>
+  </div>
+</div>
+
+<!-- RESUMO -->
+<div id="tela-resumo">
+  <div class="resumo-inner">
+    <button class="btn-back" onclick="irPara('menu')" style="margin-bottom:18px;display:block">← Voltar</button>
+    <h2 class="resumo-titulo">📋 20 Conceitos que Mais Caem</h2>
+    <p class="resumo-sub">Decore esses e você já tem base sólida para a prova.</p>
+    <div id="lista-resumo"></div>
+    <button class="btn-primary" style="margin-top:24px" onclick="irPara('menu')">Voltar ao Menu</button>
+  </div>
+</div>
+
+<script>
+const QUESTOES = [
+  { numero:1, tema:"Hemostasia", pergunta:"Durante uma lesão vascular, a primeira resposta fisiológica do organismo é reduzir a perda sanguínea até que o tampão plaquetário seja formado. Qual evento ocorre inicialmente na hemostasia?", alternativas:["Fibrinólise","Vasoconstrição","Formação de fibrina","Ativação da plasmina","Degradação do coágulo"], correta:1, explicacao:"A vasoconstrição é a primeira resposta — ocorre em segundos após a lesão, reduzindo o fluxo de sangue para a área lesada. É um reflexo neurogênico mediado também por endotelina. Só depois vêm as plaquetas (tampão primário) e a cascata de coagulação (fibrina = tampão secundário).", erradas:"Fibrinólise e plasmina são os processos de DISSOLUÇÃO do coágulo — o oposto do que acontece no início. A fibrina só aparece no final da cascata de coagulação.", macete:"🧠 VASCO-PLAQUETA-FIBRINA: Vasoconstrição → Plaquetas → Fibrina. Nessa ordem, sempre!" },
+  { numero:2, tema:"Hemostasia", pergunta:"Uma estudante cortou o dedo durante uma aula prática. Minutos depois, o sangramento cessou devido à formação do tampão plaquetário. A principal célula responsável por esse processo é:", alternativas:["Neutrófilo","Hemácia","Plaqueta","Linfócito","Macrófago"], correta:2, explicacao:"As plaquetas formam o tampão primário: elas aderem ao colágeno exposto (via fator de Von Willebrand), ativam-se e agregam-se entre si liberando TXA2 e ADP. Esse tampão é suficiente para cessar sangramentos pequenos.", erradas:"Neutrófilos e macrófagos são células de defesa/inflamação, não de coagulação. Hemácias transportam oxigênio. Linfócitos são imunológicos.", macete:"🩸 Corte pequeno = plaqueta resolve. Corte grande = precisa de fibrina também." },
+  { numero:3, tema:"Edema", pergunta:"Um paciente apresenta edema generalizado grave envolvendo membros, tronco e face. Esse quadro é denominado:", alternativas:["Hematoma","Linfedema","Derrame pleural","Anasarca","Ascite"], correta:3, explicacao:"Anasarca é o edema generalizado grave acometendo TODO o corpo — membros, tronco, face e cavidades. Ocorre em situações gravíssimas como insuficiência cardíaca avançada, síndrome nefrótica grave ou cirrose descompensada.", erradas:"Linfedema é localizado por obstrução linfática. Ascite é líquido só no abdômen. Derrame pleural é líquido só no tórax. Hematoma é sangue em tecido.", macete:"🌊 ANASARCA = ANA (todo) + SARCA (corpo) = edema em TODO o corpo." },
+  { numero:4, tema:"Hipertensão / SRAA", pergunta:"A ativação excessiva do Sistema Renina-Angiotensina-Aldosterona contribui para a hipertensão arterial porque promove:", alternativas:["Vasodilatação e perda de sódio","Redução da volemia","Diminuição da resistência vascular periférica","Menor retenção hídrica","Vasoconstrição e retenção de sódio e água"], correta:4, explicacao:"A Angiotensina II causa vasoconstrição potente. A Aldosterona age nos túbulos renais retendo sódio (e água junto). Resultado: mais volume circulante + mais resistência vascular = pressão sobe dos dois lados da equação PA = DC × RVP.", erradas:"Todas as outras alternativas descrevem efeitos OPOSTOS ao SRAA. O SRAA nunca dilata nem perde sódio — ele sempre conserva e contrai.", macete:"🔑 SRAA = Retém sal, Retém água, Aperta vaso. Três Rs que sobem a pressão." },
+  { numero:5, tema:"Diabetes Tipo 2", pergunta:"No Diabetes Mellitus tipo 2, a alteração fisiopatológica mais característica é:", alternativas:["Resistência à ação da insulina","Destruição autoimune das células beta","Ausência total de insulina","Produção excessiva de glucagon exclusivamente","Hipoglicemia persistente"], correta:0, explicacao:"No DM2, a insulina é produzida, mas os tecidos (fígado, músculo, gordura) não respondem bem a ela — resistência insulínica. Com o tempo, o pâncreas se 'esgota' tentando compensar. É diferente do DM1, onde há destruição autoimune das células beta e ausência total de insulina.", erradas:"A destruição autoimune é característica do DM TIPO 1. Ausência total de insulina também é DM1. Hipoglicemia é o oposto do que acontece no DM2.", macete:"🎯 DM1 = Destrói (autoimune). DM2 = Resiste (insulina existe, mas não funciona)." },
+  { numero:6, tema:"IAM", pergunta:"A principal causa de Infarto Agudo do Miocárdio tipo 1 é:", alternativas:["Hipotensão arterial","Ruptura de placa aterosclerótica seguida de trombose","Hiperventilação","Deficiência de hemoglobina","Edema pulmonar"], correta:1, explicacao:"A placa aterosclerótica instável se rompe, expondo material trombogênico. As plaquetas aderem e forma-se um trombo que obstrui a coronária. Sem fluxo → sem oxigênio → isquemia → necrose. Essa é a cadeia clássica do IAM tipo 1.", erradas:"Hipotensão pode causar IAM tipo 2 (desequilíbrio oferta/demanda). Hiperventilação e edema pulmonar não causam IAM diretamente.", macete:"💔 PLACA ROMPE → TROMBO FORMA → CORONÁRIA FECHA → MÚSCULO MORRE." },
+  { numero:7, tema:"Alzheimer / Parkinson", pergunta:"Na Doença de Alzheimer, uma das alterações neuropatológicas clássicas é:", alternativas:["Perda de mielina periférica","Depósito de cálcio intracelular","Formação de corpos de Lewy","Formação de placas de beta-amiloide","Hipertrofia neuronal"], correta:3, explicacao:"Alzheimer tem DOIS achados histológicos clássicos: (1) Placas senis de beta-amiloide extracelular e (2) Emaranhados neurofibrilares de proteína Tau hiperfosforilada intracelular. Ambos levam à morte neuronal e perda de memória.", erradas:"Corpos de Lewy são a marca do PARKINSON e da demência de Lewy — não do Alzheimer! Perda de mielina é esclerose múltipla.", macete:"🧩 ALZHEIMER = Amiloide + tAu. PARKINSON = corPos de Lewy (P de Parkinson, P de corpo)." },
+  { numero:8, tema:"Alzheimer / Parkinson", pergunta:"Na Doença de Parkinson, os sintomas motores estão relacionados principalmente à:", alternativas:["Redução da dopamina","Redução da serotonina","Formação de beta-amiloide","Produção excessiva de acetilcolina","Degeneração do hipocampo"], correta:0, explicacao:"A substância negra (mesencéfalo) produz dopamina para os núcleos da base, que controlam os movimentos voluntários. Quando 70-80% dos neurônios dopaminérgicos morrem, surgem os sintomas clássicos: tremor de repouso, rigidez, bradicinesia e instabilidade postural.", erradas:"Serotonina está mais ligada ao humor/depressão. Beta-amiloide é Alzheimer. A acetilcolina está relativamente aumentada no Parkinson (desequilíbrio), não é a causa primária.", macete:"🎭 PARKINSON = Perde DOPAmina na substância NEGRA. Sem dopa = sem movimento fluido." },
+  { numero:9, tema:"Hemostasia", pergunta:"Durante a fibrinólise, o plasminogênio é convertido em:", alternativas:["Trombina","Fibrinogênio","Plasmina","Colágeno","Albumina"], correta:2, explicacao:"O t-PA (ativador tissular do plasminogênio) converte plasminogênio em plasmina. A plasmina então degrada a fibrina, dissolvendo o coágulo. É o sistema de 'limpeza' da coagulação.", erradas:"Trombina converte fibrinogênio em fibrina (é o oposto — forma o coágulo). Fibrinogênio é o precursor da fibrina. Colágeno e albumina não têm relação com a fibrinólise.", macete:"🔓 Plasminogênio → Plasmina → Dissolve fibrina. Só trocar o 'ogênio' por 'a' e ela vira destrutiva!" },
+  { numero:10, tema:"Enfisema Pulmonar", pergunta:"No enfisema pulmonar ocorre principalmente:", alternativas:["Destruição dos septos alveolares","Formação de trombos pulmonares","Hipertrofia dos alvéolos","Acúmulo de líquido pleural","Fibrose cardíaca"], correta:0, explicacao:"No enfisema, as proteases (elastase neutrofílica) destroem os septos alveolares, aumentando o espaço aéreo mas reduzindo drasticamente a superfície de troca gasosa. O pulmão fica hiperinsuflado mas ineficiente para oxigenar o sangue.", erradas:"Hipertrofia dos alvéolos não ocorre — o que ocorre é destruição e fusão deles. Trombos pulmonares são embolia pulmonar, quadro distinto.", macete:"🚬 Cigarro → neutrófilos → proteases → destroem septos → menos superfície → menos oxigênio." },
+  { numero:11, tema:"Tríade de Virchow", pergunta:"Uma mulher viajou 18 horas de ônibus sem pausas e dois dias depois desenvolveu edema, calor e dor na panturrilha. Qual fator da Tríade de Virchow está mais relacionado?", alternativas:["Hipercoagulabilidade","Lesão endotelial","Estase sanguínea","Vasodilatação","Trombocitopenia"], correta:2, explicacao:"Ficar sentada 18 horas sem mover as pernas → sangue para de circular nas veias dos membros inferiores → estase sanguínea. Sangue parado coagula. A Tríade de Virchow tem três componentes: estase, lesão endotelial e hipercoagulabilidade. Nesse caso, a estase é claramente o fator dominante.", erradas:"Lesão endotelial seria por trauma ou inflamação vascular. Hipercoagulabilidade seria em trombofilias ou neoplasias. A viagem longa = imobilização = estase.", macete:"✈️ Viagem longa + imobilização = ESTASE. Sangue parado = sangue que coagula." },
+  { numero:12, tema:"Edema", pergunta:"Um paciente com insuficiência cardíaca congestiva apresenta edema progressivo em membros inferiores. O principal mecanismo fisiopatológico responsável é:", alternativas:["Aumento da pressão hidrostática capilar","Redução da drenagem linfática","Aumento da permeabilidade vascular","Redução da pressão arterial","Deficiência de albumina"], correta:0, explicacao:"Na ICC, o coração fraco não bombeia eficientemente → sangue 'represa' nas veias → aumenta a pressão venosa → aumenta a pressão hidrostática nos capilares → líquido é empurrado para fora dos vasos para o interstício. Gravidade puxa para membros inferiores.", erradas:"Deficiência de albumina causaria edema por redução da pressão oncótica (mecanismo da síndrome nefrótica). Permeabilidade aumentada ocorre na inflamação. Na ICC o mecanismo é hidrostático.", macete:"❤️ ICC = coração fraco → pressão venosa sobe → edema hidrostático em MMII." },
+  { numero:13, tema:"Edema", pergunta:"Um paciente com síndrome nefrótica apresenta edema facial importante ao despertar. O mecanismo mais diretamente envolvido é:", alternativas:["Obstrução linfática","Aumento da pressão oncótica","Vasoconstrição sistêmica","Redução da pressão oncótica plasmática","Aumento da pressão arterial"], correta:3, explicacao:"Na síndrome nefrótica, os rins perdem proteínas (especialmente albumina) na urina (proteinúria maciça). Com menos albumina no plasma, a pressão oncótica cai. Sem a 'força de sucção' das proteínas, a água fica no interstício = edema. O edema facial ao acordar é clássico porque não há influência gravitacional.", erradas:"Aumento da pressão oncótica seria o oposto — puxaria mais água para dentro do vaso. Obstrução linfática daria linfedema localizado.", macete:"🫘 NEFRÓTICO = perde proteína → menos oncótica → edema facial. CARDÍACO = pressão sobe → edema em MMII." },
+  { numero:14, tema:"Linfedema", pergunta:"Após mastectomia com retirada de linfonodos axilares, uma paciente desenvolveu aumento de volume persistente do membro superior. Esse edema ocorre principalmente por:", alternativas:["Hipertensão arterial","Obstrução da drenagem linfática","Hipoproteinemia","Insuficiência renal","Inflamação sistêmica"], correta:1, explicacao:"Ao retirar os linfonodos axilares, a via de drenagem linfática do braço é interrompida. A linfa não consegue retornar e se acumula no membro = linfedema. É uma complicação conhecida e frequente da mastectomia com esvaziamento axilar.", erradas:"Hipoproteinemia causaria edema bilateral e generalizado. Hipertensão e insuficiência renal não explicam edema unilateral de membro superior.", macete:"🎗️ Mastectomia + linfonodos retirados = linfedema no braço. Sem dreno = acúmulo." },
+  { numero:15, tema:"IAM", pergunta:"Durante um IAM, a diminuição da oferta de oxigênio reduz a fosforilação oxidativa. Qual consequência ocorre primeiro?", alternativas:["Aumento do ATP","Formação de cicatriz","Redução do ATP celular","Regeneração miocárdica","Hipertrofia ventricular"], correta:2, explicacao:"Sem oxigênio, a mitocôndria não consegue fazer fosforilação oxidativa → não produz ATP. A célula fica sem energia → bomba Na+/K+ falha → acúmulo de sódio e água → inchaço celular → morte por necrose. A cicatriz e hipertrofia são consequências tardias.", erradas:"ATP nunca aumenta na isquemia — cai. Cicatriz e hipertrofia são respostas tardias (dias a semanas). Regeneração miocárdica é mínima no adulto.", macete:"⚡ Isquemia → sem O₂ → sem ATP → célula morre. Cascata em dominó, sempre nessa ordem." },
+  { numero:16, tema:"Diabetes Tipo 2", pergunta:"A hiperglicemia crônica promove formação de AGEs. Uma consequência desses compostos é:", alternativas:["Proteção endotelial","Aumento da sensibilidade à insulina","Redução do estresse oxidativo","Lesão vascular progressiva","Diminuição da inflamação"], correta:3, explicacao:"Os AGEs se ligam a receptores (RAGE) nas células endoteliais e promovem: inflamação, estresse oxidativo, espessamento da membrana basal e disfunção endotelial. Isso explica as complicações macro e microvasculares do diabetes: retinopatia, nefropatia, neuropatia e doença coronariana.", erradas:"Todas as outras alternativas são o OPOSTO do que os AGEs fazem. AGEs são sempre prejudiciais.", macete:"🍬 Glicose alta + tempo = AGEs = Agressão ao Endotélio. Açúcar gruda nas proteínas e as destrói." },
+  { numero:17, tema:"Enfisema Pulmonar", pergunta:"Um fumante de longa data apresenta destruição progressiva dos alvéolos. Qual mecanismo está diretamente relacionado?", alternativas:["Aumento da atividade das antiproteases","Desequilíbrio entre proteases e antiproteases","Produção excessiva de surfactante","Hipertrofia alveolar","Redução dos neutrófilos"], correta:1, explicacao:"O cigarro recruta neutrófilos e macrófagos que liberam elastase e outras proteases. Normalmente a alfa-1-antitripsina neutraliza essas enzimas. O cigarro também inativa as antiproteases pelo estresse oxidativo. Resultado: proteases em excesso destroem o parênquima alveolar.", erradas:"Se as antiproteases aumentassem, protegeriam o pulmão. O problema é exatamente o oposto: antiproteases insuficientes ou inativadas.", macete:"⚖️ ENFISEMA = muita PROTEASE + pouca ANTIPROTEASE = pulmão destruído." },
+  { numero:18, tema:"Alzheimer / Parkinson", pergunta:"No Alzheimer, os emaranhados neurofibrilares são constituídos principalmente por:", alternativas:["Beta-amiloide","Dopamina","Proteína Tau hiperfosforilada","Serotonina","Acetilcolina"], correta:2, explicacao:"A proteína Tau normalmente estabiliza os microtúbulos dos neurônios. No Alzheimer, ela fica hiperfosforilada, perde sua função e forma agregados intracelulares — os emaranhados neurofibrilares. Isso destrói o citoesqueleto neuronal.", erradas:"Beta-amiloide forma as PLACAS SENIS (extracelular), não os emaranhados. São dois achados diferentes na mesma doença! Dopamina é Parkinson.", macete:"🧶 EMARANHADOS = Tau (intracelular). PLACAS = Amiloide (extracelular). Dois achados, uma doença." },
+  { numero:19, tema:"Alzheimer / Parkinson", pergunta:"A perda de neurônios dopaminérgicos na substância negra está relacionada principalmente ao desenvolvimento de:", alternativas:["Alzheimer","Esclerose múltipla","Parkinson","AVC hemorrágico","Epilepsia"], correta:2, explicacao:"A substância negra (mesencéfalo) é a principal fonte de dopamina para o estriado. Quando mais de 70-80% dos neurônios dopaminérgicos morrem, o controle motor se deteriora progressivamente, causando os sintomas clássicos do Parkinson.", erradas:"Alzheimer afeta principalmente o córtex e hipocampo. Esclerose múltipla é desmielinização. AVC hemorrágico é ruptura vascular. Epilepsia é atividade elétrica anormal.", macete:"⚫ Substância NEGRA + DOPAMINA = PARKINSON. Substância negra fica despigmentada no Parkinson." },
+  { numero:20, tema:"Embolia", pergunta:"A embolia gordurosa está mais frequentemente associada a:", alternativas:["Fraturas de ossos longos","Hipertensão arterial","Diabetes mellitus","Doença renal crônica","Alzheimer"], correta:0, explicacao:"Fraturas de ossos longos (fêmur, tíbia) liberam gotículas de gordura da medula óssea para a circulação. Essa gordura pode embolizar para pulmões, cérebro e pele (petéquias). É uma complicação grave do trauma ortopédico.", erradas:"As outras condições não têm relação direta com embolia gordurosa. Embolia gordurosa = trauma em osso longo.", macete:"🦴 OSSO LONGO FRATURA → gordura da medula → embolia gordurosa. Tríade: pulmão + cérebro + petéquias." },
+  { numero:21, tema:"IAM", pergunta:"Homem de 67 anos com IAM por ruptura de placa aterosclerótica. Qual sequência fisiopatológica explica a necrose miocárdica?", alternativas:["Isquemia → diminuição da fosforilação oxidativa → redução do ATP → necrose celular","Inflamação → aumento do ATP → necrose","Vasodilatação → hipóxia → regeneração celular","Hipertrofia → apoptose → fibrose","Edema → hiperplasia → necrose"], correta:0, explicacao:"Essa é a cascata perfeita do IAM: trombo obstrui coronária → isquemia → sem O₂ → fosforilação oxidativa cessa → sem ATP → bombas iônicas falham → influxo de Ca²⁺ e Na⁺ → morte celular por necrose de coagulação.", erradas:"ATP nunca aumenta na isquemia. Vasodilatação não causa isquemia. Regeneração miocárdica não ocorre no adulto.", macete:"📉 IAM em cadeia: TROMBO → ISQUEMIA → SEM ATP → NECROSE. Cada elo leva ao próximo." },
+  { numero:22, tema:"Hipertensão / SRAA", pergunta:"Mulher de 62 anos com hipertensão há 20 anos sem tratamento, agora com redução da função renal. A lesão renal ocorre porque:", alternativas:["A hipertensão reduz permanentemente o fluxo sanguíneo cerebral","O aumento crônico da pressão causa lesão progressiva dos vasos e do parênquima renal","A hipertensão promove destruição autoimune dos néfrons","O aumento da pressão arterial reduz a filtração glomerular desde os estágios iniciais","A hipertensão impede completamente a ação do SRAA"], correta:1, explicacao:"A hipertensão crônica causa nefroesclerose: a pressão elevada lesiona as arteríolas renais (hialinose, hiperplasia), reduz o fluxo glomerular progressivamente e leva à atrofia dos néfrons. É um processo lento, por isso 20 anos sem tratamento resultam em doença renal crônica.", erradas:"Autoimunidade não é o mecanismo da HAS. A filtração glomerular pode ser preservada por anos antes de cair. O SRAA está geralmente ativado na HAS, não impedido.", macete:"🫀→🫘 HAS longa sem trato = arteríolas renais lesadas = néfrons mortos = rim encolhe." },
+  { numero:23, tema:"Diabetes Tipo 2", pergunta:"Paciente com DM2 há 18 anos desenvolveu retinopatia, nefropatia e doença arterial coronariana. Qual mecanismo está mais relacionado?", alternativas:["Produção excessiva de hemoglobina","Hipoglicemia recorrente","Formação de AGEs, estresse oxidativo e lesão endotelial","Aumento da atividade das antiproteases","Redução da resistência vascular periférica"], correta:2, explicacao:"As complicações crônicas do DM2 têm base no trio AGEs + estresse oxidativo + lesão endotelial. Os AGEs danificam membranas basais (retinopatia e nefropatia). O estresse oxidativo e a inflamação lesam as artérias maiores (doença coronariana).", erradas:"Hipoglicemia recorrente causaria sintomas neurológicos agudos, não complicações vasculares crônicas. Antiproteases são do enfisema.", macete:"🔁 DM2 longo = AGEs + oxidativo + endotélio lesado = olho + rim + coração. Tudo vascular!" },
+  { numero:24, tema:"Linfedema", pergunta:"Paciente submetida à mastectomia radical com esvaziamento axilar apresenta edema persistente no membro superior. Esse quadro ocorre porque:", alternativas:["Houve redução da pressão oncótica plasmática","Houve aumento da pressão hidrostática sistêmica","Houve aumento da permeabilidade vascular","Houve comprometimento da drenagem linfática regional","Houve aumento da síntese de albumina"], correta:3, explicacao:"Com a remoção dos linfonodos axilares, a via linfática do braço fica obstruída. A linfa não drena mais → acumula no interstício → linfedema. É progressivo, crônico e de difícil tratamento.", erradas:"Redução de albumina causaria edema bilateral sistêmico. Aumento de permeabilidade é inflamação aguda. Aumento de albumina seria protetor, não causaria edema.", macete:"🦾 Mastectomia + axilar = braço sem dreno linfático = linfedema unilateral." },
+  { numero:25, tema:"Enfisema Pulmonar", pergunta:"Homem fumou 40 anos e desenvolveu enfisema. A destruição dos septos alveolares reduz a superfície de troca gasosa. A principal consequência funcional é:", alternativas:["Redução da hematopoiese","Comprometimento das trocas gasosas","Aumento da complacência vascular","Aumento da produção de surfactante","Hipertrofia dos brônquios"], correta:1, explicacao:"Os alvéolos são o local das trocas gasosas. Quando os septos são destruídos, alvéolos se fundem em espaços maiores com MENOS superfície total. O resultado é hipoxemia e hipercapnia — insuficiência respiratória.", erradas:"Hematopoiese ocorre na medula óssea. Produção de surfactante não aumenta. Hipertrofia brônquica é mais característica da bronquite crônica.", macete:"🫁 Menos septos = menos superfície = menos troca = menos O₂. Simples e direto." },
+  { numero:26, tema:"Hemostasia", pergunta:"Durante a formação de um trombo, ocorre ativação da cascata de coagulação e produção de trombina. A principal função da trombina é:", alternativas:["Converter fibrinogênio em fibrina","Converter plasmina em plasminogênio","Produzir colágeno vascular","Ativar diretamente hemácias","Degradar a fibrina"], correta:0, explicacao:"A trombina é o grande executor da coagulação: ela cliva o fibrinogênio (solúvel) em fibrina (insolúvel), que polimeriza formando a rede do coágulo. A trombina também ativa plaquetas e o fator XIII (que estabiliza a fibrina).", erradas:"A fibrina é degradada pela PLASMINA (fibrinólise), não pela trombina. Trombina não atua em hemácias nem produz colágeno.", macete:"🔨 TROMBINA = enzima que FAZ o trombo. Fibrinogênio → Fibrina é a ação dela." },
+  { numero:27, tema:"Alzheimer / Parkinson", pergunta:"Paciente com Alzheimer apresenta perda de memória e perda de autonomia. Essas manifestações estão relacionadas principalmente a:", alternativas:["Destruição dos neurônios motores periféricos","Formação de placas beta-amiloide e emaranhados neurofibrilares","Degeneração exclusiva do cerebelo","Redução da produção de hemoglobina","Obstrução dos vasos cerebrais"], correta:1, explicacao:"As placas de beta-amiloide e os emaranhados de Tau causam morte neuronal progressiva no hipocampo e córtex cerebral — regiões responsáveis por memória, aprendizado e funções executivas. A perda de sinapses colinérgicas também contribui.", erradas:"Neurônios motores periféricos = ELA ou poliomielite. Cerebelo = ataxia. Obstrução vascular = demência vascular (diferente do Alzheimer).", macete:"🧠 ALZHEIMER afeta MEMÓRIA e COGNIÇÃO. PARKINSON afeta MOVIMENTO. Locais e proteínas diferentes!" },
+  { numero:28, tema:"Alzheimer / Parkinson", pergunta:"Na Doença de Parkinson, a degeneração da substância negra reduz a dopamina nos núcleos da base. Como consequência, ocorre principalmente:", alternativas:["Aumento da memória episódica","Melhora do controle motor","Comprometimento do controle dos movimentos voluntários","Aumento da velocidade de condução nervosa","Hipertrofia cortical"], correta:2, explicacao:"Os núcleos da base controlam a iniciação e suavidade dos movimentos. Sem dopamina, o circuito fica desequilibrado: o córtex motor não recebe os sinais adequados → movimentos lentos (bradicinesia), rígidos e trementes.", erradas:"Parkinson não afeta memória episódica (isso é Alzheimer). O controle motor piora, não melhora. Velocidade de condução nervosa não aumenta.", macete:"🤝 Sem DOPA nos núcleos da base = movimento travado, lento, tremendo." },
+  { numero:29, tema:"Tríade de Virchow", pergunta:"Paciente com TVP após ficar acamada semanas. Dias depois apresentou dispneia súbita e dor torácica. O evento mais provável é:", alternativas:["Embolia gordurosa","Embolia gasosa","Acidente vascular hemorrágico","Tromboembolismo pulmonar","Choque anafilático"], correta:3, explicacao:"TVP → fragmento do trombo se desprende (êmbolo) → viaja pela circulação venosa → chega ao coração direito → obstrui artéria pulmonar = TEP. Dispneia súbita + dor torácica + história de TVP = clínica clássica de Tromboembolismo Pulmonar.", erradas:"Embolia gordurosa vem de fratura óssea. Embolia gasosa vem de procedimentos com ar. AVC hemorrágico é no cérebro. Anafilaxia tem causa alérgica.", macete:"🫁 TVP nas pernas → êmbolo sobe → obstrui pulmão = TEP. O trombo viaja para o pulmão." },
+  { numero:30, tema:"IAM", pergunta:"Paciente hipertenso, diabético e tabagista com múltiplos fatores de risco cardiovasculares. Esses fatores contribuem para o IAM porque favorecem:", alternativas:["A formação de placas ateroscleróticas e eventos trombóticos","A regeneração do endotélio vascular","A redução da agregação plaquetária","A diminuição da resistência vascular periférica","A ativação da fibrinólise"], correta:0, explicacao:"HAS lesiona o endotélio mecanicamente. DM causa lesão por AGEs e hiperglicemia. Tabagismo gera estresse oxidativo e disfunção endotelial. Os três juntos aceleram a aterosclerose e aumentam a trombogenicidade vascular. Placa + trombo = IAM.", erradas:"Nenhum desses fatores protege ou regenera o endotélio. A fibrinólise e a redução plaquetária seriam protetoras — o oposto do que eles causam.", macete:"☠️ HAS + DM + CIGARRO = trio do infarto. Todos lesam o endotélio, destino: placa + trombo." }
+];
+
+const RESUMO = [
+  { c:"Ordem da hemostasia", d:"Vasoconstrição → Tampão plaquetário → Fibrina" },
+  { c:"Fibrinólise", d:"Plasminogênio → Plasmina (dissolve fibrina)" },
+  { c:"Trombina", d:"Converte fibrinogênio em fibrina" },
+  { c:"Tríade de Virchow", d:"Estase + Lesão endotelial + Hipercoagulabilidade" },
+  { c:"Estase (viagem longa)", d:"Imobilização → estase venosa → TVP" },
+  { c:"TEP", d:"TVP → êmbolo → obstrução artéria pulmonar" },
+  { c:"Edema hidrostático (ICC)", d:"Coração fraco → pressão venosa ↑ → edema em MMII" },
+  { c:"Edema oncótico (nefrótico)", d:"Perde albumina → pressão oncótica ↓ → edema facial" },
+  { c:"Linfedema (mastectomia)", d:"Remoção linfonodos → obstrução linfática → edema unilateral" },
+  { c:"Anasarca", d:"Edema generalizado (membros + tronco + face)" },
+  { c:"SRAA", d:"Angiotensina II: vasoconstrição. Aldosterona: retém Na⁺ e H₂O" },
+  { c:"DM1 vs DM2", d:"DM1 = destruição autoimune. DM2 = resistência à insulina" },
+  { c:"AGEs", d:"Glicação crônica → lesão vascular → retinopatia, nefropatia, coronariopatia" },
+  { c:"IAM tipo 1", d:"Placa rompe → trombo → isquemia → sem ATP → necrose" },
+  { c:"Isquemia celular", d:"Sem O₂ → sem fosforilação oxidativa → sem ATP → necrose" },
+  { c:"Alzheimer (placas)", d:"Beta-amiloide extracelular = placas senis" },
+  { c:"Alzheimer (emaranhados)", d:"Proteína Tau hiperfosforilada intracelular" },
+  { c:"Parkinson", d:"Perda dopamina na substância negra → corpos de Lewy → distúrbio motor" },
+  { c:"Enfisema", d:"Desequilíbrio protease/antiprotease → destruição septos alveolares" },
+  { c:"Embolia gordurosa", d:"Fratura de osso longo → gordura da medula na circulação" }
+];
+
+// State
+let questoesFiltradas = [...QUESTOES];
+let idxAtual = 0;
+let modoEstudo = false;
+let respostaSelecionada = null;
+let acertos = 0;
+let respondidas = 0;
+let historico = [];
+let explicacaoVisivel = false;
+
+// Init
+function init() {
+  const sel = document.getElementById('filtro-select');
+  const temas = ['Todos', ...new Set(QUESTOES.map(q => q.tema))];
+  temas.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t === 'Todos' ? `Todos (${QUESTOES.length})` : `${t} (${QUESTOES.filter(q=>q.tema===t).length})`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', atualizarFiltro);
+  atualizarFiltro();
+}
+
+function atualizarFiltro() {
+  const v = document.getElementById('filtro-select').value;
+  questoesFiltradas = v === 'Todos' ? [...QUESTOES] : QUESTOES.filter(q => q.tema === v);
+  document.getElementById('filtro-count').textContent = questoesFiltradas.length + ' questão(ões) selecionada(s)';
+}
+
+function irPara(tela) {
+  ['menu','quiz','resultado','resumo'].forEach(t => {
+    const el = document.getElementById('tela-'+t);
+    el.style.display = 'none';
+  });
+  const alvo = document.getElementById('tela-'+tela);
+  alvo.style.display = tela === 'resultado' ? 'flex' : 'block';
+  window.scrollTo(0,0);
+}
+
+function iniciarQuiz(estudo) {
+  modoEstudo = estudo;
+  idxAtual = 0;
+  acertos = 0;
+  respondidas = 0;
+  historico = [];
+  respostaSelecionada = null;
+  explicacaoVisivel = false;
+  irPara('quiz');
+  renderQuestao();
+}
+
+function renderQuestao() {
+  const q = questoesFiltradas[idxAtual];
+  const total = questoesFiltradas.length;
+  const pct = ((idxAtual+1)/total*100).toFixed(1);
+
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('contador-questao').textContent = (idxAtual+1)+' / '+total;
+
+  const badgeAc = document.getElementById('badge-acertos');
+  if (!modoEstudo && respondidas > 0) {
+    badgeAc.style.display = 'inline';
+    badgeAc.textContent = '✓ '+acertos;
+  } else {
+    badgeAc.style.display = 'none';
+  }
+
+  document.getElementById('tema-badge').textContent = q.tema;
+  document.getElementById('questao-num').textContent = 'Questão '+q.numero;
+  document.getElementById('questao-texto').textContent = q.pergunta;
+
+  const altDiv = document.getElementById('alternativas');
+  altDiv.innerHTML = '';
+  q.alternativas.forEach((alt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'alt-btn';
+    btn.innerHTML = '<span class="alt-letra">'+String.fromCharCode(65+idx)+')</span><span>'+alt+'</span>';
+    btn.onclick = () => responder(idx);
+    altDiv.appendChild(btn);
+  });
+
+  document.getElementById('explicacao-box').style.display = 'none';
+  document.getElementById('btn-proxima').style.display = 'none';
+  respostaSelecionada = null;
+  explicacaoVisivel = false;
+
+  if (modoEstudo) {
+    const btnP = document.getElementById('btn-proxima');
+    btnP.style.display = 'block';
+    btnP.textContent = 'Ver Explicação';
+    btnP.onclick = () => mostrarExplicacao(q.correta, null);
+  }
+}
+
+function responder(idx) {
+  if (respostaSelecionada !== null && !modoEstudo) return;
+  respostaSelecionada = idx;
+  if (!modoEstudo) {
+    respondidas++;
+    if (idx === questoesFiltradas[idxAtual].correta) acertos++;
+    historico.push({ numero: questoesFiltradas[idxAtual].numero, correto: idx === questoesFiltradas[idxAtual].correta });
+  }
+  mostrarExplicacao(questoesFiltradas[idxAtual].correta, idx);
+}
+
+function mostrarExplicacao(correta, selecionada) {
+  const q = questoesFiltradas[idxAtual];
+  explicacaoVisivel = true;
+
+  // Colorir alternativas
+  const btns = document.querySelectorAll('.alt-btn');
+  btns.forEach((btn, idx) => {
+    btn.disabled = true;
+    btn.classList.remove('correta','errada','neutra');
+    if (idx === correta) btn.classList.add('correta');
+    else if (selecionada !== null && idx === selecionada) btn.classList.add('errada');
+    else btn.classList.add('neutra');
+  });
+
+  const acertou = selecionada === correta;
+  document.getElementById('exp-emoji').textContent = selecionada === null ? '✅' : (acertou ? '✅' : '❌');
+  const stxt = document.getElementById('exp-status-txt');
+  stxt.className = 'exp-status-txt ' + (selecionada === null || acertou ? 'ok' : 'err');
+  stxt.textContent = selecionada === null ? 'Resposta: '+String.fromCharCode(65+correta)+')' : (acertou ? 'Correto!' : 'Incorreto — resposta certa: '+String.fromCharCode(65+correta)+')');
+
+  document.getElementById('exp-texto').textContent = q.explicacao;
+
+  if (q.erradas) {
+    document.getElementById('exp-erradas-wrap').style.display = 'block';
+    document.getElementById('exp-erradas').textContent = q.erradas;
+  } else {
+    document.getElementById('exp-erradas-wrap').style.display = 'none';
+  }
+  document.getElementById('exp-macete').textContent = q.macete;
+  document.getElementById('explicacao-box').style.display = 'block';
+
+  const btnP = document.getElementById('btn-proxima');
+  btnP.style.display = 'block';
+  const ehUltima = idxAtual >= questoesFiltradas.length - 1;
+  btnP.textContent = ehUltima ? 'Ver Resultado →' : 'Próxima Questão →';
+  btnP.onclick = proximaQuestao;
+}
+
+function proximaQuestao() {
+  if (idxAtual < questoesFiltradas.length - 1) {
+    idxAtual++;
+    renderQuestao();
+    window.scrollTo(0,0);
+  } else {
+    mostrarResultado();
+  }
+}
+
+function mostrarResultado() {
+  if (modoEstudo) { irPara('menu'); return; }
+  const pct = Math.round(acertos / respondidas * 100);
+  document.getElementById('resultado-emoji').textContent = pct >= 70 ? '🎉' : pct >= 50 ? '💪' : '📚';
+  document.getElementById('resultado-pct').textContent = pct+'%';
+  document.getElementById('resultado-pct').style.color = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
+  document.getElementById('resultado-sub').textContent = acertos+' de '+respondidas+' questões corretas';
+
+  const hbox = document.getElementById('historico-box');
+  hbox.innerHTML = historico.map((h,i) =>
+    '<div class="historico-item"><span class="hist-num">Questão '+h.numero+'</span><span class="'+(h.correto?'hist-ok':'hist-err')+'">'+(h.correto?'✓ Acertou':'✗ Errou')+'</span></div>'
+  ).join('');
+
+  irPara('resultado');
+}
+
+function mostrarResumo() {
+  const lista = document.getElementById('lista-resumo');
+  lista.innerHTML = RESUMO.map((item,i) =>
+    '<div class="conceito-item"><div class="conceito-num">'+(i+1)+'</div><div><div class="conceito-titulo">'+item.c+'</div><div class="conceito-detalhe">'+item.d+'</div></div></div>'
+  ).join('');
+  irPara('resumo');
+}
+
+init();
+</script>
+</body>
+</html>
